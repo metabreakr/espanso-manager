@@ -54,6 +54,15 @@ const el = {
   confirmMessage: document.getElementById('confirmMessage'),
   confirmOk: document.getElementById('confirmOk'),
   confirmCancel: document.getElementById('confirmCancel'),
+  importFile: document.getElementById('importFile'),
+  importBackdrop: document.getElementById('importBackdrop'),
+  importSummary: document.getElementById('importSummary'),
+  importList: document.getElementById('importList'),
+  importError: document.getElementById('importError'),
+  importConfirm: document.getElementById('importConfirm'),
+  bulkBackdrop: document.getElementById('bulkBackdrop'),
+  bulkList: document.getElementById('bulkList'),
+  bulkConfirm: document.getElementById('bulkConfirm'),
 };
 
 async function api(path, opts) {
@@ -401,6 +410,226 @@ function dismissBanner() {
   el.syncBanner.classList.add('hidden');
 }
 
+// ---------- CSV import + bulk delete ----------
+
+// Minimal RFC-4180-ish CSV parser: handles quoted fields, embedded newlines, and "" escapes.
+function parseCSV(text) {
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1); // strip UTF-8 BOM
+  const rows = [];
+  let field = '';
+  let row = [];
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ',') {
+      row.push(field); field = '';
+    } else if (c === '\r') {
+      // ignore; handled by \n
+    } else if (c === '\n') {
+      row.push(field); rows.push(row); row = []; field = '';
+    } else {
+      field += c;
+    }
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+// TextExpander feature tokens (fill-ins, date/time strftime tokens, clipboard/cursor/key/snippet).
+// These don't work as-is in Espanso, so we flag them.
+const TE_CODE = /%\d*[A-Za-z]|%\{|%fill|%clipboard|%cursor|%key|%snippet/;
+function hasTextExpanderCodes(s) {
+  return TE_CODE.test(s || '');
+}
+
+function oneLine(s) {
+  return (s || '').replace(/\s+/g, ' ').trim().slice(0, 140);
+}
+
+function existingTriggerSet() {
+  const set = new Set();
+  for (const s of state.snippets) {
+    if (s.trigger) set.add(s.trigger);
+    if (s.triggers) s.triggers.forEach((t) => set.add(t));
+  }
+  return set;
+}
+
+// TextExpander CSV export columns: abbreviation, content, label (no header row).
+function rowsToImportItems(rows) {
+  const existing = existingTriggerSet();
+  const items = [];
+  for (let r = 0; r < rows.length; r++) {
+    const cols = rows[r];
+    const trigger = (cols[0] || '').trim();
+    const replace = cols[1] != null ? cols[1] : '';
+    const label = (cols[2] || '').trim();
+    if (!trigger && !replace.trim()) continue; // blank line
+    if (items.length === 0 && /^(abbreviation|shortcut|trigger|abbr)$/i.test(trigger)) continue; // header
+    items.push({
+      trigger,
+      replace,
+      label,
+      rich: hasTextExpanderCodes(replace),
+      duplicate: existing.has(trigger),
+      checked: true,
+    });
+  }
+  return items;
+}
+
+// Shared multiselect click handler (Cmd/Ctrl toggles one, Shift extends a range).
+function multiselectClick(ctx, rerender) {
+  return (e) => {
+    const rowEl = e.target.closest('[data-idx]');
+    if (!rowEl) return;
+    const i = Number(rowEl.dataset.idx);
+    if (e.shiftKey && ctx.anchor !== null && ctx.anchor < ctx.items.length) {
+      const lo = Math.min(ctx.anchor, i);
+      const hi = Math.max(ctx.anchor, i);
+      const target = ctx.items[ctx.anchor].checked;
+      for (let k = lo; k <= hi; k++) ctx.items[k].checked = target;
+    } else {
+      ctx.items[i].checked = !ctx.items[i].checked;
+      ctx.anchor = i;
+    }
+    rerender();
+  };
+}
+
+function selectRowHtml(idx, checked, title, sub, badges) {
+  return `
+    <div class="select-row ${checked ? 'checked' : ''}" data-idx="${idx}">
+      <input type="checkbox" class="select-check" ${checked ? 'checked' : ''} tabindex="-1" />
+      <div class="select-row-main">
+        <div class="select-row-title">${escapeHtml(title)}</div>
+        <div class="select-row-sub">${escapeHtml(sub)}</div>
+      </div>
+      <div class="select-row-badges">${badges}</div>
+    </div>`;
+}
+
+// ----- Import -----
+const importCtx = { items: [], anchor: null };
+
+function renderImportRows() {
+  const scroll = el.importList.scrollTop;
+  el.importList.innerHTML = importCtx.items.map((it, i) => {
+    let badges = '';
+    if (it.rich) badges += '<span class="badge warn" title="Uses TextExpander features (fill-ins, date tokens) that will not work as-is in Espanso">TextExpander codes</span>';
+    if (it.duplicate) badges += '<span class="badge">Trigger exists</span>';
+    return selectRowHtml(i, it.checked, it.trigger || '(no trigger)', oneLine(it.replace), badges);
+  }).join('');
+  el.importList.scrollTop = scroll;
+  const n = importCtx.items.filter((it) => it.checked).length;
+  el.importConfirm.textContent = n ? `Import ${n}` : 'Import';
+  el.importConfirm.disabled = n === 0;
+}
+
+function openImport(items) {
+  importCtx.items = items;
+  importCtx.anchor = null;
+  const rich = items.filter((i) => i.rich).length;
+  const dup = items.filter((i) => i.duplicate).length;
+  let summary = `Found ${items.length} snippet${items.length === 1 ? '' : 's'}.`;
+  if (rich) summary += ` ${rich} contain TextExpander codes (won't work as-is).`;
+  if (dup) summary += ` ${dup} match a trigger you already have.`;
+  el.importSummary.textContent = summary;
+  el.importError.classList.add('hidden');
+  renderImportRows();
+  el.importBackdrop.classList.remove('hidden');
+}
+
+function closeImport() { el.importBackdrop.classList.add('hidden'); }
+
+function handleImportFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const items = rowsToImportItems(parseCSV(String(reader.result)));
+      if (!items.length) { showToast('No snippets found in that file', true); return; }
+      openImport(items);
+    } catch (err) {
+      showToast('Could not read that file: ' + err.message, true);
+    }
+  };
+  reader.onerror = () => showToast('Could not read that file', true);
+  reader.readAsText(file);
+}
+
+async function doImport() {
+  const selected = importCtx.items
+    .filter((it) => it.checked)
+    .map((it) => ({ trigger: it.trigger, replace: it.replace, label: it.label || undefined }));
+  if (!selected.length) return;
+  try {
+    const res = await api('/api/snippets/import', { method: 'POST', body: JSON.stringify({ snippets: selected }) });
+    state.snippets = res.snippets;
+    closeImport();
+    render();
+    showToast(savedMsg(`Imported ${res.count} snippet${res.count === 1 ? '' : 's'}`));
+  } catch (err) {
+    el.importError.textContent = err.message;
+    el.importError.classList.remove('hidden');
+  }
+}
+
+// ----- Bulk delete -----
+const bulkCtx = { items: [], anchor: null };
+
+function renderBulkRows() {
+  const scroll = el.bulkList.scrollTop;
+  el.bulkList.innerHTML = bulkCtx.items.map((it, i) => {
+    const badge = it.simple ? '' : '<span class="badge">Advanced</span>';
+    return selectRowHtml(i, it.checked, it.title, oneLine(it.replace), badge);
+  }).join('');
+  el.bulkList.scrollTop = scroll;
+  const n = bulkCtx.items.filter((it) => it.checked).length;
+  el.bulkConfirm.textContent = n ? `Delete ${n}` : 'Delete';
+  el.bulkConfirm.disabled = n === 0;
+}
+
+function openBulkDelete() {
+  bulkCtx.items = state.snippets.map((s) => ({
+    id: s.id,
+    title: s.triggers && s.triggers.length ? s.triggers.join(', ') : (s.trigger || '(no trigger)'),
+    replace: s.replace,
+    simple: s.simple,
+    checked: false,
+  }));
+  bulkCtx.anchor = null;
+  renderBulkRows();
+  el.bulkBackdrop.classList.remove('hidden');
+}
+
+function closeBulkDelete() { el.bulkBackdrop.classList.add('hidden'); }
+
+async function doBulkDelete() {
+  const ids = bulkCtx.items.filter((it) => it.checked).map((it) => it.id);
+  if (!ids.length) return;
+  const ok = await confirmDialog({
+    message: `Delete ${ids.length} snippet${ids.length === 1 ? '' : 's'}? This cannot be undone.`,
+    okLabel: `Delete ${ids.length}`,
+  });
+  if (!ok) return;
+  try {
+    const res = await api('/api/snippets/bulk-delete', { method: 'POST', body: JSON.stringify({ ids }) });
+    state.snippets = res.snippets;
+    closeBulkDelete();
+    render();
+    showToast(savedMsg(`Deleted ${res.count} snippet${res.count === 1 ? '' : 's'}`));
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
 async function init() {
   document.getElementById('newSnippetBtn').addEventListener('click', openCreate);
   document.getElementById('emptyNewBtn').addEventListener('click', openCreate);
@@ -410,7 +639,9 @@ async function init() {
   document.getElementById('deleteBtn').addEventListener('click', remove);
   document.querySelectorAll('.tab-btn').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
   el.modalBackdrop.addEventListener('click', (e) => { if (e.target === el.modalBackdrop) closeModal(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeSyncModal(); } });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { closeModal(); closeSyncModal(); closeImport(); closeBulkDelete(); }
+  });
   el.search.addEventListener('input', render);
 
   el.viewGridBtn.addEventListener('click', () => setView('grid'));
@@ -433,6 +664,31 @@ async function init() {
   el.syncBackdrop.addEventListener('click', (e) => { if (e.target === el.syncBackdrop) closeSyncModal(); });
   el.bannerEnableBtn.addEventListener('click', enableSyncFromBanner);
   el.bannerDismissBtn.addEventListener('click', dismissBanner);
+
+  // Import
+  document.getElementById('importBtn').addEventListener('click', () => el.importFile.click());
+  el.importFile.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleImportFile(file);
+    e.target.value = ''; // allow re-selecting the same file
+  });
+  el.importList.addEventListener('click', multiselectClick(importCtx, renderImportRows));
+  document.getElementById('importClose').addEventListener('click', closeImport);
+  document.getElementById('importCancel').addEventListener('click', closeImport);
+  el.importConfirm.addEventListener('click', doImport);
+  document.getElementById('importAll').addEventListener('click', () => { importCtx.items.forEach((i) => (i.checked = true)); renderImportRows(); });
+  document.getElementById('importNone').addEventListener('click', () => { importCtx.items.forEach((i) => (i.checked = false)); renderImportRows(); });
+  el.importBackdrop.addEventListener('click', (e) => { if (e.target === el.importBackdrop) closeImport(); });
+
+  // Bulk delete
+  document.getElementById('bulkDeleteBtn').addEventListener('click', openBulkDelete);
+  el.bulkList.addEventListener('click', multiselectClick(bulkCtx, renderBulkRows));
+  document.getElementById('bulkClose').addEventListener('click', closeBulkDelete);
+  document.getElementById('bulkCancel').addEventListener('click', closeBulkDelete);
+  el.bulkConfirm.addEventListener('click', doBulkDelete);
+  document.getElementById('bulkAll').addEventListener('click', () => { bulkCtx.items.forEach((i) => (i.checked = true)); renderBulkRows(); });
+  document.getElementById('bulkNone').addEventListener('click', () => { bulkCtx.items.forEach((i) => (i.checked = false)); renderBulkRows(); });
+  el.bulkBackdrop.addEventListener('click', (e) => { if (e.target === el.bulkBackdrop) closeBulkDelete(); });
 
   // Cmd+Enter (or Ctrl+Enter) saves while the edit modal is open.
   document.addEventListener('keydown', (e) => {

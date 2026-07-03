@@ -31,10 +31,14 @@
           <svg viewBox="0 0 16 16" width="16" height="16"><rect x="1" y="2" width="14" height="2.5" rx="1"/><rect x="1" y="6.75" width="14" height="2.5" rx="1"/><rect x="1" y="11.5" width="14" height="2.5" rx="1"/></svg>
         </button>
       </div>
+      <button id="importBtn" title="Import snippets from a CSV file">Import</button>
+      <button id="bulkDeleteBtn" title="Select multiple snippets to delete">Bulk Delete</button>
       <button id="syncBtn" class="sync-btn" title="iCloud sync status"></button>
       <button id="newSnippetBtn" class="primary">+ New Snippet</button>
     </div>
   </header>
+
+  <input type="file" id="importFile" accept=".csv,text/csv" hidden />
 
   <div id="syncBanner" class="sync-banner hidden">
     <span>💡 Keep your snippets in sync across your Macs with iCloud Drive.</span>
@@ -133,6 +137,50 @@
         <div class="spacer"></div>
         <button id="confirmCancel">Cancel</button>
         <button id="confirmOk" class="danger">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import preview -->
+  <div id="importBackdrop" class="modal-backdrop hidden">
+    <div class="modal list-modal">
+      <div class="modal-header">
+        <h2>Import snippets</h2>
+        <button id="importClose" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+      <p id="importSummary" class="hint"></p>
+      <div class="list-tools">
+        <button id="importAll" class="small">Select all</button>
+        <button id="importNone" class="small">Select none</button>
+        <span class="hint list-tip">Shift-click a row to select a range · ⌘-click to toggle one</span>
+      </div>
+      <div id="importList" class="select-list"></div>
+      <p id="importError" class="error hidden"></p>
+      <div class="modal-footer">
+        <div class="spacer"></div>
+        <button id="importCancel">Cancel</button>
+        <button id="importConfirm" class="primary">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk delete -->
+  <div id="bulkBackdrop" class="modal-backdrop hidden">
+    <div class="modal list-modal">
+      <div class="modal-header">
+        <h2>Bulk delete</h2>
+        <button id="bulkClose" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+      <p class="hint">Select the snippets to delete. Shift-click a row to select a range · ⌘-click to toggle one.</p>
+      <div class="list-tools">
+        <button id="bulkAll" class="small">Select all</button>
+        <button id="bulkNone" class="small">Select none</button>
+      </div>
+      <div id="bulkList" class="select-list"></div>
+      <div class="modal-footer">
+        <div class="spacer"></div>
+        <button id="bulkCancel">Cancel</button>
+        <button id="bulkConfirm" class="danger">Delete</button>
       </div>
     </div>
   </div>

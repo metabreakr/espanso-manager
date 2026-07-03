@@ -261,6 +261,23 @@ export function createMatch(fields) {
   return listMatches()
 }
 
+// Append many entries at once (used by CSV import). One file write, one Espanso reload.
+export function createMatches(list) {
+  if (!Array.isArray(list) || list.length === 0) throw new Error('No snippets to import')
+  const doc = loadDoc()
+  const seq = getMatchesSeq(doc)
+  let count = 0
+  for (const fields of list) {
+    const trigger = fields.trigger || (Array.isArray(fields.triggers) ? fields.triggers[0] : null)
+    if (!trigger || typeof fields.replace !== 'string') continue
+    seq.items.push(buildEntryNode(fields))
+    count += 1
+  }
+  if (count === 0) throw new Error('No valid snippets to import')
+  saveDoc(doc)
+  return { count, snippets: listMatches() }
+}
+
 export function updateMatch(id, fields) {
   const doc = loadDoc()
   const seq = getMatchesSeq(doc)
@@ -302,4 +319,19 @@ export function deleteMatch(id) {
   seq.items.splice(id, 1)
   saveDoc(doc)
   return listMatches()
+}
+
+// Delete many entries by index at once (used by bulk delete).
+export function deleteMatches(ids) {
+  if (!Array.isArray(ids) || ids.length === 0) throw new Error('No snippets selected')
+  const doc = loadDoc()
+  const seq = getMatchesSeq(doc)
+  const unique = [...new Set(ids.map(Number))].filter(
+    (i) => Number.isInteger(i) && i >= 0 && i < seq.items.length
+  )
+  // Splice from the end so earlier indices stay valid as we remove.
+  unique.sort((a, b) => b - a)
+  for (const i of unique) seq.items.splice(i, 1)
+  saveDoc(doc)
+  return { count: unique.length, snippets: listMatches() }
 }

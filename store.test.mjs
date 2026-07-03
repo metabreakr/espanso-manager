@@ -61,3 +61,23 @@ test('entries with unknown keys are flagged advanced', () => {
   const adv = store.listMatches().find((s) => s.trigger === ':dyn')
   assert.equal(adv.simple, false)
 })
+
+test('createMatches imports many and skips invalid rows', () => {
+  const before = store.listMatches().length
+  const res = store.createMatches([
+    { trigger: ';i1', replace: 'one', label: 'L1' },
+    { trigger: ';i2', replace: 'two' },
+    { trigger: '', replace: 'no trigger' }, // skipped
+  ])
+  assert.equal(res.count, 2)
+  assert.equal(store.listMatches().length, before + 2)
+})
+
+test('deleteMatches removes multiple by index safely', () => {
+  const list = store.listMatches()
+  const ids = [list.length - 1, list.length - 2] // last two
+  const before = list.length
+  const res = store.deleteMatches(ids)
+  assert.equal(res.count, 2)
+  assert.equal(store.listMatches().length, before - 2)
+})

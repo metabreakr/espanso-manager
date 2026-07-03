@@ -63,6 +63,12 @@ async function handleApi(req, res, url) {
       data = { matchFile: store.MATCH_FILE, espansoReload: !!store.findEspanso() }
     } else if (method === 'GET' && p === '/api/snippets') {
       data = store.listMatches()
+    } else if (method === 'POST' && p === '/api/snippets/import') {
+      const { snippets } = await readJsonBody(req)
+      data = store.createMatches(snippets)
+    } else if (method === 'POST' && p === '/api/snippets/bulk-delete') {
+      const { ids } = await readJsonBody(req)
+      data = store.deleteMatches(ids)
     } else if (method === 'POST' && p === '/api/snippets') {
       const { raw, ...fields } = await readJsonBody(req)
       data = raw ? store.createMatchRaw(raw) : store.createMatch(fields)

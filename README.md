@@ -30,7 +30,12 @@ any advanced entries** — it edits the YAML surgically rather than rewriting it
 
 ## Features
 
-- **Create / edit / delete** snippets with a form UI, plus live search.
+- **Create / edit / delete** snippets with a form UI, plus live search and sorting.
+- **Import from CSV** (e.g. a TextExpander export) with a preview: pick exactly what to import
+  (Shift/⌘-click to multi-select), with snippets that use TextExpander-only features flagged and
+  existing-trigger duplicates highlighted.
+- **Bulk delete** — select many snippets at once and remove them together.
+- **Auto-reloads Espanso** after every change, so edits take effect immediately.
 - **Grid or list view**, remembered between sessions.
 - **Comment-preserving** — your `# comments` and layout in `base.yml` are never clobbered.
 - **Advanced entries stay safe** — snippets with variables, shell/date output, regex triggers,
