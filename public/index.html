@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Espanso Manager</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="icon.png" alt="" class="brand-icon" />
+      <div>
+        <h1>Espanso Manager</h1>
+        <p id="matchFilePath" class="subtitle"></p>
+      </div>
+    </div>
+    <div class="actions">
+      <input id="search" type="search" placeholder="Search snippets…" />
+      <select id="sortSelect" class="sort-select" aria-label="Sort snippets">
+        <option value="file">File order</option>
+        <option value="added">Recently added</option>
+        <option value="name-asc">Name A–Z</option>
+        <option value="name-desc">Name Z–A</option>
+      </select>
+      <div class="view-toggle" role="group" aria-label="View">
+        <button id="viewGridBtn" class="view-btn" aria-label="Grid view" title="Grid view">
+          <svg viewBox="0 0 16 16" width="16" height="16"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+        </button>
+        <button id="viewListBtn" class="view-btn" aria-label="List view" title="List view">
+          <svg viewBox="0 0 16 16" width="16" height="16"><rect x="1" y="2" width="14" height="2.5" rx="1"/><rect x="1" y="6.75" width="14" height="2.5" rx="1"/><rect x="1" y="11.5" width="14" height="2.5" rx="1"/></svg>
+        </button>
+      </div>
+      <button id="syncBtn" class="sync-btn" title="iCloud sync status"></button>
+      <button id="newSnippetBtn" class="primary">+ New Snippet</button>
+    </div>
+  </header>
+
+  <div id="syncBanner" class="sync-banner hidden">
+    <span>💡 Keep your snippets in sync across your Macs with iCloud Drive.</span>
+    <div class="sync-banner-actions">
+      <button id="bannerEnableBtn" class="primary small">Enable iCloud Sync</button>
+      <button id="bannerDismissBtn" class="icon-btn" aria-label="Dismiss">✕</button>
+    </div>
+  </div>
+
+  <main id="list" class="list"></main>
+
+  <div id="emptyState" class="empty-state hidden">
+    <p>No snippets yet.</p>
+    <button id="emptyNewBtn" class="primary">Create your first snippet</button>
+  </div>
+
+  <!-- Edit/Create modal -->
+  <div id="modalBackdrop" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">New Snippet</h2>
+        <button id="modalClose" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button class="tab-btn active" data-tab="simple">Simple</button>
+        <button class="tab-btn" data-tab="raw">Raw YAML</button>
+      </div>
+
+      <div id="tabSimple" class="tab-panel">
+        <label>
+          Trigger(s)
+          <input id="fTrigger" type="text" placeholder=":mytrigger  (comma-separate for multiple)" />
+        </label>
+        <label class="field-label">Replace with</label>
+        <div class="md-toolbar" id="mdToolbar">
+          <button type="button" class="md-btn" data-md="bold" title="Bold"><b>B</b></button>
+          <button type="button" class="md-btn" data-md="italic" title="Italic"><i>I</i></button>
+          <button type="button" class="md-btn" data-md="strike" title="Strikethrough"><s>S</s></button>
+          <button type="button" class="md-btn" data-md="code" title="Inline code">&lt;/&gt;</button>
+          <button type="button" class="md-btn" data-md="link" title="Link">🔗</button>
+          <button type="button" class="md-btn" data-md="heading" title="Heading">H</button>
+          <button type="button" class="md-btn" data-md="list" title="Bullet list">•</button>
+        </div>
+        <textarea id="fReplace" rows="6" placeholder="Text to insert…"></textarea>
+        <p class="hint md-hint">Formatting inserts Markdown (e.g. <code>**bold**</code>). It renders in Markdown-aware apps like Obsidian, Slack, Discord, and GitHub; elsewhere it expands as the literal characters.</p>
+        <label>
+          Label <span class="hint">(optional description shown in Espanso search)</span>
+          <input id="fLabel" type="text" placeholder="Optional description" />
+        </label>
+        <div class="checkbox-row">
+          <label class="checkbox"><input id="fWord" type="checkbox" /> Only trigger on whole words</label>
+          <label class="checkbox"><input id="fPropagateCase" type="checkbox" /> Propagate case</label>
+        </div>
+      </div>
+
+      <div id="tabRaw" class="tab-panel hidden">
+        <p class="hint">Advanced snippets (vars, regex triggers, forms, images, etc.) are edited here as raw YAML for one match entry.</p>
+        <textarea id="fRaw" rows="14" spellcheck="false" class="code"></textarea>
+      </div>
+
+      <p id="modalError" class="error hidden"></p>
+
+      <div class="modal-footer">
+        <button id="deleteBtn" class="danger hidden">Delete</button>
+        <div class="spacer"></div>
+        <button id="cancelBtn">Cancel</button>
+        <button id="saveBtn" class="primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sync status modal -->
+  <div id="syncBackdrop" class="modal-backdrop hidden">
+    <div class="modal small">
+      <div class="modal-header">
+        <h2>iCloud Sync</h2>
+        <button id="syncClose" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+      <p id="syncDescription" class="hint sync-description"></p>
+      <div class="modal-footer">
+        <div class="spacer"></div>
+        <button id="syncToggleBtn" class="primary">Enable Sync</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

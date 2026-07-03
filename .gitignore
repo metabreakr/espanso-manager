@@ -1,0 +1,7 @@
+node_modules/
+package-lock.json
+.DS_Store
+*.log
+# Any base.yml that lands in the repo dir is user data, not part of the project.
+base.yml
+base.yml.backup-*

@@ -1,0 +1,26 @@
+{
+  "name": "espanso-manager",
+  "version": "1.0.0",
+  "description": "A simple local web UI for managing your Espanso snippets, with comment-preserving YAML editing and optional iCloud sync across Macs.",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "espanso",
+    "snippets",
+    "text-expander",
+    "yaml",
+    "macos"
+  ],
+  "author": "Jonathan Ruzek",
+  "license": "GPL-3.0-only",
+  "dependencies": {
+    "yaml": "^2.9.0"
+  }
+}
