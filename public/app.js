@@ -49,6 +49,11 @@ const el = {
   syncBanner: document.getElementById('syncBanner'),
   bannerEnableBtn: document.getElementById('bannerEnableBtn'),
   bannerDismissBtn: document.getElementById('bannerDismissBtn'),
+  confirmBackdrop: document.getElementById('confirmBackdrop'),
+  confirmTitle: document.getElementById('confirmTitle'),
+  confirmMessage: document.getElementById('confirmMessage'),
+  confirmOk: document.getElementById('confirmOk'),
+  confirmCancel: document.getElementById('confirmCancel'),
 };
 
 async function api(path, opts) {
@@ -278,9 +283,44 @@ async function save() {
   }
 }
 
+// Themed confirmation dialog. Returns a promise<boolean>. Used instead of the browser's
+// confirm(), which WebKit suppresses inside the native app window.
+function confirmDialog({ title = 'Confirm', message, okLabel = 'Delete', danger = true } = {}) {
+  return new Promise((resolve) => {
+    el.confirmTitle.textContent = title;
+    el.confirmMessage.textContent = message;
+    el.confirmOk.textContent = okLabel;
+    el.confirmOk.className = danger ? 'danger' : 'primary';
+    el.confirmBackdrop.classList.remove('hidden');
+    el.confirmOk.focus();
+
+    const cleanup = () => {
+      el.confirmBackdrop.classList.add('hidden');
+      el.confirmOk.removeEventListener('click', onOk);
+      el.confirmCancel.removeEventListener('click', onCancel);
+      el.confirmBackdrop.removeEventListener('click', onBackdrop);
+      document.removeEventListener('keydown', onKey, true);
+    };
+    const done = (result) => { cleanup(); resolve(result); };
+    const onOk = () => done(true);
+    const onCancel = () => done(false);
+    const onBackdrop = (e) => { if (e.target === el.confirmBackdrop) done(false); };
+    // Capture phase + stopPropagation so Escape cancels only this dialog, not the editor behind it.
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.stopPropagation(); done(false); }
+      else if (e.key === 'Enter') { e.stopPropagation(); done(true); }
+    };
+    el.confirmOk.addEventListener('click', onOk);
+    el.confirmCancel.addEventListener('click', onCancel);
+    el.confirmBackdrop.addEventListener('click', onBackdrop);
+    document.addEventListener('keydown', onKey, true);
+  });
+}
+
 async function remove() {
   if (state.editingId === null) return;
-  if (!confirm('Delete this snippet? This cannot be undone.')) return;
+  const ok = await confirmDialog({ message: 'Delete this snippet? This cannot be undone.', okLabel: 'Delete' });
+  if (!ok) return;
   try {
     state.snippets = await api(`/api/snippets/${state.editingId}`, { method: 'DELETE' });
     showToast(savedMsg('Snippet deleted'));

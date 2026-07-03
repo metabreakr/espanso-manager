@@ -233,6 +233,7 @@ button.icon-btn { background: transparent; border: none; font-size: 16px; color:
 .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .modal-header h2 { font-size: 16px; margin: 0; }
 .modal.small { width: 400px; }
+#confirmBackdrop { z-index: 40; }
 
 .sync-banner {
   display: flex;
