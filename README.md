@@ -10,6 +10,16 @@
   Optional one-click iCloud sync keeps your snippets in step across Macs.
 </p>
 
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue.svg" alt="License: GPL-3.0" /></a>
+  <img src="https://img.shields.io/badge/platform-macOS-lightgrey.svg" alt="Platform: macOS" />
+  <a href="https://github.com/metabreakr/espanso-manager/actions/workflows/ci.yml"><img src="https://github.com/metabreakr/espanso-manager/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+</p>
+
+<p align="center">
+  <img src="docs/screenshot.png" width="820" alt="Espanso Manager screenshot" />
+</p>
+
 ---
 
 ## Why
@@ -70,8 +80,7 @@ Espanso keeps working unchanged while the file syncs.
 
 On a second Mac: let iCloud finish downloading the `Espanso` folder, run `install.command` from
 it, open the app, and click **Enable Sync** — if that Mac already had its own snippets, they're
-backed up first. See [`README.txt`](../README.txt) in the iCloud `Espanso` folder for the
-step-by-step new-Mac guide.
+backed up first (never silently overwritten).
 
 ## Development
 
