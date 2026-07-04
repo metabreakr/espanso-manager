@@ -38,16 +38,18 @@ body {
 .brand { display: flex; align-items: center; gap: 12px; }
 .brand-icon { width: 40px; height: 40px; border-radius: 10px; }
 .brand h1 { font-size: 18px; margin: 0; }
-.subtitle { margin: 2px 0 0; font-size: 12px; color: var(--text-dim); font-family: ui-monospace, monospace; }
+.subtitle { margin: 2px 0 0; font-size: 12px; color: var(--text-dim); font-family: ui-monospace, monospace; white-space: nowrap; }
 
-.actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+/* Two right-aligned rows: browse controls + New Snippet on top, action buttons below. */
+.actions { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+.actions-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 
-/* Keep every control in the top bar the same height so the row lines up. */
-.actions > input[type="search"],
-.actions > .sort-select,
-.actions > .view-toggle,
-.actions > button { height: 38px; }
-.actions > .view-toggle > .view-btn { height: 100%; }
+/* Keep every control in the top bar the same height so the rows line up. */
+.actions-row > input[type="search"],
+.actions-row > .sort-select,
+.actions-row > .view-toggle,
+.actions-row > button { height: 38px; }
+.actions-row > .view-toggle > .view-btn { height: 100%; }
 
 input[type="search"], input[type="text"], textarea {
   background: var(--panel-2);
@@ -59,7 +61,7 @@ input[type="search"], input[type="text"], textarea {
   font-family: inherit;
   outline: none;
 }
-input[type="search"] { width: 240px; }
+input[type="search"] { width: 190px; }
 input:focus, textarea:focus { border-color: var(--accent-1); }
 
 textarea.code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; }
@@ -234,6 +236,35 @@ button.icon-btn { background: transparent; border: none; font-size: 16px; color:
 .modal-header h2 { font-size: 16px; margin: 0; }
 .modal.small { width: 400px; }
 #confirmBackdrop { z-index: 40; }
+
+.modal.test-modal { width: 720px; }
+.test-panes { display: flex; gap: 12px; }
+.test-panes > * { flex: 1; min-width: 0; }
+#testInput {
+  height: 280px;
+  resize: vertical;
+  display: block;
+  width: 100%;
+  color: var(--text);
+  font-size: 13px;
+}
+.test-preview {
+  height: 280px;
+  overflow-y: auto;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+}
+.test-preview:empty::before { content: "Preview"; color: var(--text-dim); }
+.test-preview h1, .test-preview h2, .test-preview h3 { margin: 0.4em 0 0.2em; }
+.test-preview p { margin: 0.3em 0; }
+.test-preview ul { margin: 0.3em 0; padding-left: 1.4em; }
+.test-preview code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em; }
+.test-preview a { color: var(--accent-1); }
 
 .modal.list-modal { width: 680px; }
 .list-tools { display: flex; align-items: center; gap: 8px; margin: 10px 0 8px; }

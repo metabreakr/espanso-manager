@@ -35,6 +35,8 @@ any advanced entries** — it edits the YAML surgically rather than rewriting it
   (Shift/⌘-click to multi-select), with snippets that use TextExpander-only features flagged and
   existing-trigger duplicates highlighted.
 - **Bulk delete** — select many snippets at once and remove them together.
+- **Markdown editing + live Test preview** — a formatting toolbar for snippet text, plus a
+  Test panel that renders your Markdown live so you can see how it'll look.
 - **Auto-reloads Espanso** after every change, so edits take effect immediately.
 - **Grid or list view**, remembered between sessions.
 - **Comment-preserving** — your `# comments` and layout in `base.yml` are never clobbered.

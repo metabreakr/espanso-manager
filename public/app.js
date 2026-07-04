@@ -63,6 +63,9 @@ const el = {
   bulkBackdrop: document.getElementById('bulkBackdrop'),
   bulkList: document.getElementById('bulkList'),
   bulkConfirm: document.getElementById('bulkConfirm'),
+  testBackdrop: document.getElementById('testBackdrop'),
+  testInput: document.getElementById('testInput'),
+  testPreview: document.getElementById('testPreview'),
 };
 
 async function api(path, opts) {
@@ -630,6 +633,58 @@ async function doBulkDelete() {
   }
 }
 
+// ---------- Test snippet (Markdown-aware preview) ----------
+
+// Inline Markdown → HTML. Input is already HTML-escaped, so we only ever inject our own tags.
+function inlineMarkdown(s) {
+  return s
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
+    .replace(/~~([^~]+)~~/g, '<del>$1</del>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+
+// Minimal, safe block-level Markdown renderer (headings, lists, paragraphs, line breaks).
+function renderMarkdown(src) {
+  const lines = escapeHtml(src).split('\n');
+  const out = [];
+  let inList = false;
+  const closeList = () => { if (inList) { out.push('</ul>'); inList = false; } };
+  for (const line of lines) {
+    const heading = line.match(/^(#{1,6})\s+(.*)$/);
+    const listItem = line.match(/^\s*[-*]\s+(.*)$/);
+    if (heading) {
+      closeList();
+      const level = heading[1].length;
+      out.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`);
+    } else if (listItem) {
+      if (!inList) { out.push('<ul>'); inList = true; }
+      out.push(`<li>${inlineMarkdown(listItem[1])}</li>`);
+    } else if (line.trim() === '') {
+      closeList();
+      out.push('<br>');
+    } else {
+      closeList();
+      out.push(`<p>${inlineMarkdown(line)}</p>`);
+    }
+  }
+  closeList();
+  return out.join('');
+}
+
+function renderTestPreview() {
+  el.testPreview.innerHTML = renderMarkdown(el.testInput.value);
+}
+
+function openTest() {
+  renderTestPreview();
+  el.testBackdrop.classList.remove('hidden');
+  el.testInput.focus();
+}
+
+function closeTest() { el.testBackdrop.classList.add('hidden'); }
+
 async function init() {
   document.getElementById('newSnippetBtn').addEventListener('click', openCreate);
   document.getElementById('emptyNewBtn').addEventListener('click', openCreate);
@@ -640,7 +695,7 @@ async function init() {
   document.querySelectorAll('.tab-btn').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
   el.modalBackdrop.addEventListener('click', (e) => { if (e.target === el.modalBackdrop) closeModal(); });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeModal(); closeSyncModal(); closeImport(); closeBulkDelete(); }
+    if (e.key === 'Escape') { closeModal(); closeSyncModal(); closeImport(); closeBulkDelete(); closeTest(); }
   });
   el.search.addEventListener('input', render);
 
@@ -690,6 +745,14 @@ async function init() {
   document.getElementById('bulkNone').addEventListener('click', () => { bulkCtx.items.forEach((i) => (i.checked = false)); renderBulkRows(); });
   el.bulkBackdrop.addEventListener('click', (e) => { if (e.target === el.bulkBackdrop) closeBulkDelete(); });
 
+  // Test / preview
+  document.getElementById('testBtn').addEventListener('click', openTest);
+  el.testInput.addEventListener('input', renderTestPreview);
+  document.getElementById('testClose').addEventListener('click', closeTest);
+  document.getElementById('testDone').addEventListener('click', closeTest);
+  document.getElementById('testClear').addEventListener('click', () => { el.testInput.value = ''; renderTestPreview(); el.testInput.focus(); });
+  el.testBackdrop.addEventListener('click', (e) => { if (e.target === el.testBackdrop) closeTest(); });
+
   // Cmd+Enter (or Ctrl+Enter) saves while the edit modal is open.
   document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !el.modalBackdrop.classList.contains('hidden')) {
@@ -700,7 +763,9 @@ async function init() {
 
   try {
     const meta = await api('/api/meta');
-    el.matchFilePath.textContent = meta.matchFile;
+    const parts = meta.matchFile.split('/');
+    el.matchFilePath.textContent = (parts.length > 3 ? '…/' : '') + parts.slice(-3).join('/');
+    el.matchFilePath.title = meta.matchFile;
     state.espansoReload = !!meta.espansoReload;
     state.snippets = await api('/api/snippets');
     render();

@@ -16,25 +16,30 @@
       </div>
     </div>
     <div class="actions">
-      <input id="search" type="search" placeholder="Search snippets…" />
-      <select id="sortSelect" class="sort-select" aria-label="Sort snippets">
-        <option value="file">File order</option>
-        <option value="added">Recently added</option>
-        <option value="name-asc">Name A–Z</option>
-        <option value="name-desc">Name Z–A</option>
-      </select>
-      <div class="view-toggle" role="group" aria-label="View">
-        <button id="viewGridBtn" class="view-btn" aria-label="Grid view" title="Grid view">
-          <svg viewBox="0 0 16 16" width="16" height="16"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
-        </button>
-        <button id="viewListBtn" class="view-btn" aria-label="List view" title="List view">
-          <svg viewBox="0 0 16 16" width="16" height="16"><rect x="1" y="2" width="14" height="2.5" rx="1"/><rect x="1" y="6.75" width="14" height="2.5" rx="1"/><rect x="1" y="11.5" width="14" height="2.5" rx="1"/></svg>
-        </button>
+      <div class="actions-row">
+        <input id="search" type="search" placeholder="Search snippets…" />
+        <select id="sortSelect" class="sort-select" aria-label="Sort snippets">
+          <option value="file">File order</option>
+          <option value="added">Recently added</option>
+          <option value="name-asc">Name A–Z</option>
+          <option value="name-desc">Name Z–A</option>
+        </select>
+        <div class="view-toggle" role="group" aria-label="View">
+          <button id="viewGridBtn" class="view-btn" aria-label="Grid view" title="Grid view">
+            <svg viewBox="0 0 16 16" width="16" height="16"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+          </button>
+          <button id="viewListBtn" class="view-btn" aria-label="List view" title="List view">
+            <svg viewBox="0 0 16 16" width="16" height="16"><rect x="1" y="2" width="14" height="2.5" rx="1"/><rect x="1" y="6.75" width="14" height="2.5" rx="1"/><rect x="1" y="11.5" width="14" height="2.5" rx="1"/></svg>
+          </button>
+        </div>
+        <button id="newSnippetBtn" class="primary">+ New Snippet</button>
       </div>
-      <button id="importBtn" title="Import snippets from a CSV file">Import</button>
-      <button id="bulkDeleteBtn" title="Select multiple snippets to delete">Bulk Delete</button>
-      <button id="syncBtn" class="sync-btn" title="iCloud sync status"></button>
-      <button id="newSnippetBtn" class="primary">+ New Snippet</button>
+      <div class="actions-row">
+        <button id="syncBtn" class="sync-btn" title="iCloud sync status"></button>
+        <button id="testBtn" title="Preview snippet text (Markdown-aware)">Test</button>
+        <button id="importBtn" title="Import snippets from a CSV file">Import</button>
+        <button id="bulkDeleteBtn" title="Select multiple snippets to delete">Bulk Delete</button>
+      </div>
     </div>
   </header>
 
@@ -181,6 +186,26 @@
         <div class="spacer"></div>
         <button id="bulkCancel">Cancel</button>
         <button id="bulkConfirm" class="danger">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test / preview snippet text (Markdown-aware) -->
+  <div id="testBackdrop" class="modal-backdrop hidden">
+    <div class="modal test-modal">
+      <div class="modal-header">
+        <h2>Test snippet</h2>
+        <button id="testClose" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+      <p class="hint">Type or paste snippet text to preview how its Markdown renders (bold, italic, lists, links, etc.). This is a preview only — it doesn't change your snippets.</p>
+      <div class="test-panes">
+        <textarea id="testInput" class="code" spellcheck="false" placeholder="Type snippet text…  e.g.  **bold**, *italic*, `code`, - list item"></textarea>
+        <div id="testPreview" class="test-preview"></div>
+      </div>
+      <div class="modal-footer">
+        <div class="spacer"></div>
+        <button id="testClear">Clear</button>
+        <button id="testDone" class="primary">Done</button>
       </div>
     </div>
   </div>
