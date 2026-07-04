@@ -35,10 +35,17 @@
         <button id="newSnippetBtn" class="primary">+ New Snippet</button>
       </div>
       <div class="actions-row">
+        <div class="menu-wrap">
+          <button id="toolsBtn" aria-haspopup="true" aria-expanded="false">Tools ▾</button>
+          <div id="toolsMenu" class="menu hidden" role="menu">
+            <button class="menu-item" data-action="test" role="menuitem">Test snippet…</button>
+            <button class="menu-item" data-action="import" role="menuitem">Import from CSV…</button>
+            <button class="menu-item" data-action="bulk" role="menuitem">Bulk delete…</button>
+            <div class="menu-sep"></div>
+            <button class="menu-item" data-action="restore" role="menuitem">Move out of iCloud…</button>
+          </div>
+        </div>
         <button id="syncBtn" class="sync-btn" title="iCloud sync status"></button>
-        <button id="testBtn" title="Preview snippet text (Markdown-aware)">Test</button>
-        <button id="importBtn" title="Import snippets from a CSV file">Import</button>
-        <button id="bulkDeleteBtn" title="Select multiple snippets to delete">Bulk Delete</button>
       </div>
     </div>
   </header>
@@ -206,6 +213,23 @@
         <div class="spacer"></div>
         <button id="testClear">Clear</button>
         <button id="testDone" class="primary">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Restore / move out of iCloud -->
+  <div id="restoreBackdrop" class="modal-backdrop hidden">
+    <div class="modal small">
+      <div class="modal-header">
+        <h2>Move out of iCloud</h2>
+        <button id="restoreClose" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+      <p id="restoreDesc" class="hint sync-description"></p>
+      <div class="modal-footer">
+        <button id="restoreCancel">Cancel</button>
+        <div class="spacer"></div>
+        <button id="restoreDefault" class="danger">Use default</button>
+        <button id="restoreKeep" class="primary">Keep my snippets</button>
       </div>
     </div>
   </div>

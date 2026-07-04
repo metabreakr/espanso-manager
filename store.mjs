@@ -98,6 +98,75 @@ export function disableSync() {
   return getSyncStatus()
 }
 
+// Espanso's stock default match file, used when restoring to a clean slate.
+const DEFAULT_BASE_YML = `# espanso match file
+
+# For a complete introduction, visit the official docs at: https://espanso.org/docs/
+
+# You can use this file to define the base matches (aka snippets)
+# that will be available in every application when using espanso.
+
+# Matches are substitution rules: when you type the "trigger" string
+# it gets replaced by the "replace" string.
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/espanso/espanso/dev/schemas/match.schema.json
+
+matches:
+  # Simple text replacement
+  - trigger: ":espanso"
+    replace: "Hi there!"
+
+  # NOTE: espanso uses YAML to define matches, so pay attention to the indentation!
+
+  # But matches can also be dynamic:
+
+  # Print the current date
+  - trigger: ":date"
+    replace: "{{mydate}}"
+    vars:
+      - name: mydate
+        type: date
+        params:
+          format: "%m/%d/%Y"
+
+  # Print the output of a shell command
+  - trigger: ":shell"
+    replace: "{{output}}"
+    vars:
+      - name: output
+        type: shell
+        params:
+          cmd: "echo 'Hello from your shell'"
+
+  # And much more! For more information, visit the docs: https://espanso.org/docs/
+`
+
+// Revert the iCloud setup on THIS Mac: remove the symlink and put a real base.yml back in
+// Espanso's folder. Either keep the current (synced) snippets or reset to Espanso's default.
+// The iCloud copy is intentionally left in place so other Macs (and any backup) are unaffected.
+export function restoreLocal(useDefault) {
+  let text
+  if (useDefault) {
+    text = DEFAULT_BASE_YML
+  } else {
+    // Keep whatever is currently active (read through the symlink, if any).
+    try {
+      text = fs.readFileSync(LOCAL_MATCH_FILE, 'utf8')
+    } catch {
+      text = DEFAULT_BASE_YML
+    }
+  }
+
+  if (fs.existsSync(LOCAL_MATCH_FILE) || isSymlinkTo(LOCAL_MATCH_FILE, ICLOUD_MATCH_FILE)) {
+    fs.rmSync(LOCAL_MATCH_FILE, { force: true })
+  }
+  fs.mkdirSync(path.dirname(LOCAL_MATCH_FILE), { recursive: true })
+  fs.writeFileSync(LOCAL_MATCH_FILE, text, 'utf8')
+
+  reloadEspanso()
+  return getSyncStatus()
+}
+
 // Fields our structured UI understands. Anything else on an entry makes it "advanced".
 const SIMPLE_KEYS = new Set(['trigger', 'triggers', 'replace', 'label', 'word', 'propagate_case'])
 

@@ -66,6 +66,10 @@ const el = {
   testBackdrop: document.getElementById('testBackdrop'),
   testInput: document.getElementById('testInput'),
   testPreview: document.getElementById('testPreview'),
+  toolsBtn: document.getElementById('toolsBtn'),
+  toolsMenu: document.getElementById('toolsMenu'),
+  restoreBackdrop: document.getElementById('restoreBackdrop'),
+  restoreDesc: document.getElementById('restoreDesc'),
 };
 
 async function api(path, opts) {
@@ -685,6 +689,57 @@ function openTest() {
 
 function closeTest() { el.testBackdrop.classList.add('hidden'); }
 
+// ---------- Tools menu ----------
+
+function closeToolsMenu() {
+  el.toolsMenu.classList.add('hidden');
+  el.toolsBtn.setAttribute('aria-expanded', 'false');
+}
+function toggleToolsMenu() {
+  const nowHidden = el.toolsMenu.classList.toggle('hidden');
+  el.toolsBtn.setAttribute('aria-expanded', String(!nowHidden));
+}
+
+// ---------- Restore / move out of iCloud ----------
+
+function openRestore() {
+  const s = state.sync;
+  if (s && s.linked) {
+    el.restoreDesc.innerHTML =
+      "This removes the iCloud sync link on <strong>this Mac</strong> and puts a normal " +
+      "<strong>base.yml</strong> back in Espanso's folder.<br><br>Your iCloud copy is left " +
+      "untouched — other Macs keep working, and you can delete the <strong>Espanso</strong> " +
+      "folder in iCloud Drive later to fully remove it.<br><br>What should the local file contain?";
+  } else {
+    el.restoreDesc.innerHTML =
+      "iCloud sync isn't on, so there's nothing to unlink. You can still reset your local " +
+      "<strong>base.yml</strong> to Espanso's default file, or keep it as-is.";
+  }
+  el.restoreBackdrop.classList.remove('hidden');
+}
+
+function closeRestore() { el.restoreBackdrop.classList.add('hidden'); }
+
+async function doRestore(useDefault) {
+  if (useDefault) {
+    const ok = await confirmDialog({
+      message: "Replace your local base.yml with Espanso's default file? Your current snippets stay safe in iCloud Drive.",
+      okLabel: 'Use default',
+    });
+    if (!ok) return;
+  }
+  try {
+    state.sync = await api('/api/restore', { method: 'POST', body: JSON.stringify({ useDefault }) });
+    state.snippets = await api('/api/snippets');
+    updateSyncUi();
+    render();
+    closeRestore();
+    showToast(useDefault ? 'Restored Espanso default (no longer synced)' : 'Snippets moved out of iCloud (no longer synced)');
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
 async function init() {
   document.getElementById('newSnippetBtn').addEventListener('click', openCreate);
   document.getElementById('emptyNewBtn').addEventListener('click', openCreate);
@@ -695,7 +750,7 @@ async function init() {
   document.querySelectorAll('.tab-btn').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
   el.modalBackdrop.addEventListener('click', (e) => { if (e.target === el.modalBackdrop) closeModal(); });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeModal(); closeSyncModal(); closeImport(); closeBulkDelete(); closeTest(); }
+    if (e.key === 'Escape') { closeModal(); closeSyncModal(); closeImport(); closeBulkDelete(); closeTest(); closeRestore(); closeToolsMenu(); }
   });
   el.search.addEventListener('input', render);
 
@@ -720,8 +775,7 @@ async function init() {
   el.bannerEnableBtn.addEventListener('click', enableSyncFromBanner);
   el.bannerDismissBtn.addEventListener('click', dismissBanner);
 
-  // Import
-  document.getElementById('importBtn').addEventListener('click', () => el.importFile.click());
+  // Import (opened from the Tools menu)
   el.importFile.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) handleImportFile(file);
@@ -735,8 +789,7 @@ async function init() {
   document.getElementById('importNone').addEventListener('click', () => { importCtx.items.forEach((i) => (i.checked = false)); renderImportRows(); });
   el.importBackdrop.addEventListener('click', (e) => { if (e.target === el.importBackdrop) closeImport(); });
 
-  // Bulk delete
-  document.getElementById('bulkDeleteBtn').addEventListener('click', openBulkDelete);
+  // Bulk delete (opened from the Tools menu)
   el.bulkList.addEventListener('click', multiselectClick(bulkCtx, renderBulkRows));
   document.getElementById('bulkClose').addEventListener('click', closeBulkDelete);
   document.getElementById('bulkCancel').addEventListener('click', closeBulkDelete);
@@ -745,13 +798,34 @@ async function init() {
   document.getElementById('bulkNone').addEventListener('click', () => { bulkCtx.items.forEach((i) => (i.checked = false)); renderBulkRows(); });
   el.bulkBackdrop.addEventListener('click', (e) => { if (e.target === el.bulkBackdrop) closeBulkDelete(); });
 
-  // Test / preview
-  document.getElementById('testBtn').addEventListener('click', openTest);
+  // Test / preview (opened from the Tools menu)
   el.testInput.addEventListener('input', renderTestPreview);
   document.getElementById('testClose').addEventListener('click', closeTest);
   document.getElementById('testDone').addEventListener('click', closeTest);
   document.getElementById('testClear').addEventListener('click', () => { el.testInput.value = ''; renderTestPreview(); el.testInput.focus(); });
   el.testBackdrop.addEventListener('click', (e) => { if (e.target === el.testBackdrop) closeTest(); });
+
+  // Tools menu
+  el.toolsBtn.addEventListener('click', toggleToolsMenu);
+  el.toolsMenu.addEventListener('click', (e) => {
+    const item = e.target.closest('.menu-item');
+    if (!item) return;
+    closeToolsMenu();
+    const action = item.dataset.action;
+    if (action === 'test') openTest();
+    else if (action === 'import') el.importFile.click();
+    else if (action === 'bulk') openBulkDelete();
+    else if (action === 'restore') openRestore();
+  });
+  // Close the menu when clicking anywhere outside it.
+  document.addEventListener('click', (e) => { if (!e.target.closest('.menu-wrap')) closeToolsMenu(); });
+
+  // Restore / move out of iCloud
+  document.getElementById('restoreClose').addEventListener('click', closeRestore);
+  document.getElementById('restoreCancel').addEventListener('click', closeRestore);
+  document.getElementById('restoreKeep').addEventListener('click', () => doRestore(false));
+  document.getElementById('restoreDefault').addEventListener('click', () => doRestore(true));
+  el.restoreBackdrop.addEventListener('click', (e) => { if (e.target === el.restoreBackdrop) closeRestore(); });
 
   // Cmd+Enter (or Ctrl+Enter) saves while the edit modal is open.
   document.addEventListener('keydown', (e) => {

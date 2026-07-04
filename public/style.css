@@ -237,6 +237,36 @@ button.icon-btn { background: transparent; border: none; font-size: 16px; color:
 .modal.small { width: 400px; }
 #confirmBackdrop { z-index: 40; }
 
+.menu-wrap { position: relative; }
+#toolsBtn { display: inline-flex; align-items: center; gap: 6px; }
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 25;
+  min-width: 200px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45);
+}
+.menu-item {
+  text-align: left;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 9px 10px;
+  font-size: 14px;
+  color: var(--text);
+}
+.menu-item:hover { background: var(--panel-2); }
+.menu-sep { height: 1px; background: var(--border); margin: 4px 2px; }
+
 .modal.test-modal { width: 720px; }
 .test-panes { display: flex; gap: 12px; }
 .test-panes > * { flex: 1; min-width: 0; }

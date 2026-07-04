@@ -83,6 +83,9 @@ async function handleApi(req, res, url) {
       data = store.enableSync()
     } else if (method === 'POST' && p === '/api/sync/disable') {
       data = store.disableSync()
+    } else if (method === 'POST' && p === '/api/restore') {
+      const { useDefault } = await readJsonBody(req)
+      data = store.restoreLocal(!!useDefault)
     } else {
       return sendJson(res, 404, { ok: false, error: 'Not found' })
     }

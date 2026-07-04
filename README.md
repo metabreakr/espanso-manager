@@ -45,6 +45,10 @@ any advanced entries** — it edits the YAML surgically rather than rewriting it
 - **One-click iCloud sync** — move your match file into iCloud Drive (with a symlink left where
   Espanso expects it) so edits sync across your Macs. Toggle on/off in-app; existing snippets
   are always backed up first, never silently overwritten.
+- **Revert anytime** — a **Tools ▸ Move out of iCloud** action puts a normal `base.yml` back in
+  Espanso's folder (keeping your snippets, or resetting to the default) and removes the symlink,
+  without touching your iCloud copy.
+- **Tidy Tools menu** — Test, Import, Bulk delete, and the revert action live in one dropdown.
 - **Runs as a standalone app window** — a small native WebKit window (not a browser tab).
   If no Swift compiler is available at install time, it gracefully falls back to opening the
   UI in your default browser instead.
