@@ -31,6 +31,9 @@ any advanced entries** — it edits the YAML surgically rather than rewriting it
 ## Features
 
 - **Create / edit / delete** snippets with a form UI, plus live search and sorting.
+- **Snippet titles** — give a snippet a friendly title (stored as Espanso's `label`); the card
+  shows the title as its heading with the trigger beneath, and falls back to the trigger when
+  there's no title.
 - **Import from CSV** (e.g. a TextExpander export) with a preview: pick exactly what to import
   (Shift/⌘-click to multi-select), with snippets that use TextExpander-only features flagged and
   existing-trigger duplicates highlighted.

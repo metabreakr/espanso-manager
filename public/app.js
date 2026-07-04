@@ -110,10 +110,11 @@ function setSort(sort) {
   render();
 }
 
-// Sort key for name sorting: the trigger (or label), minus any leading punctuation
-// like ":" so ":addr" sorts under "a".
+// Sort key for name sorting: the title (label) if set, else the trigger, minus any
+// leading punctuation like ":" so ":addr" sorts under "a".
 function nameKey(s) {
-  return triggerLabel(s).toLowerCase().replace(/^[^a-z0-9]+/, '');
+  const base = s.label || triggerLabel(s);
+  return base.toLowerCase().replace(/^[^a-z0-9]+/, '');
 }
 
 // Sort a copy of the list for display only. Each snippet keeps its original `id`
@@ -152,14 +153,18 @@ function render() {
   for (const s of sortSnippets(filtered)) {
     const card = document.createElement('div');
     card.className = 'card';
+    const hasTitle = !!s.label;
+    const heading = hasTitle ? s.label : triggerLabel(s);
     card.innerHTML = `
-      <div class="card-trigger">${escapeHtml(triggerLabel(s))}</div>
+      <div class="card-head">
+        <div class="card-title ${hasTitle ? '' : 'is-trigger'}">${escapeHtml(heading)}</div>
+        ${hasTitle ? `<div class="card-trigger-sub">${escapeHtml(triggerLabel(s))}</div>` : ''}
+      </div>
       <div class="card-replace">${escapeHtml(s.replace || '')}</div>
       <div class="card-badges">
         ${s.simple ? '' : '<span class="badge advanced">Advanced</span>'}
         ${s.word ? '<span class="badge">Whole word</span>' : ''}
         ${s.propagate_case ? '<span class="badge">Propagate case</span>' : ''}
-        ${s.label ? `<span class="badge">${escapeHtml(s.label)}</span>` : ''}
       </div>
     `;
     card.addEventListener('click', () => openEdit(s));
