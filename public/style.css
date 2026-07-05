@@ -293,11 +293,24 @@ button.icon-btn { background: transparent; border: none; font-size: 16px; color:
 .about-powered-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 8px; }
 .about-badges { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 .tech { font-size: 12px; padding: 3px 10px; border: 1px solid var(--border); border-radius: 999px; color: var(--text); background: var(--panel-2); }
+.about-actions { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+.about-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.about-btn:hover { border-color: #3a4152; text-decoration: none; }
 .bmc-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 10px;
   padding: 10px 18px;
   border-radius: 10px;
   background: #ffdd00;

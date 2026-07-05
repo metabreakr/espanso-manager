@@ -61,9 +61,9 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << 'PLIST'
   <key>CFBundleIdentifier</key>
   <string>ca.ruzek.espansomanager</string>
   <key>CFBundleVersion</key>
-  <string>1.2.2</string>
+  <string>1.2.3</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.2.2</string>
+  <string>1.2.3</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleExecutable</key>

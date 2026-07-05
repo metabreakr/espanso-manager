@@ -1,6 +1,6 @@
 {
   "name": "espanso-manager",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "A simple local web UI for managing your Espanso snippets, with comment-preserving YAML editing and optional iCloud sync across Macs.",
   "type": "module",
   "main": "server.mjs",
