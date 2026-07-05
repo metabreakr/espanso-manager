@@ -19,6 +19,37 @@ const PUBLIC_DIR = path.join(__dirname, 'public')
 const HOST = '127.0.0.1'
 const PORT = Number(process.env.PORT || process.env.ESPANSO_MANAGER_PORT) || 8934
 
+// App version + GitHub repo (for the About screen and update checks).
+const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'))
+const VERSION = pkg.version
+const REPO = 'metabreakr/espanso-manager'
+
+// Compare two dotted numeric versions; returns >0 if a is newer than b.
+function compareVersions(a, b) {
+  const pa = String(a).split('.').map(Number)
+  const pb = String(b).split('.').map(Number)
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] || 0) - (pb[i] || 0)
+    if (d) return d
+  }
+  return 0
+}
+
+async function checkForUpdates() {
+  const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
+    headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'espanso-manager' },
+  })
+  if (!res.ok) throw new Error(`GitHub returned ${res.status}`)
+  const data = await res.json()
+  const latest = String(data.tag_name || '').replace(/^v/, '')
+  return {
+    current: VERSION,
+    latest,
+    url: data.html_url || `https://github.com/${REPO}/releases`,
+    updateAvailable: !!latest && compareVersions(latest, VERSION) > 0,
+  }
+}
+
 const CONTENT_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -60,7 +91,9 @@ async function handleApi(req, res, url) {
   try {
     let data
     if (method === 'GET' && p === '/api/meta') {
-      data = { matchFile: store.MATCH_FILE, espansoReload: !!store.findEspanso() }
+      data = { matchFile: store.MATCH_FILE, espansoReload: !!store.findEspanso(), version: VERSION, repo: REPO }
+    } else if (method === 'GET' && p === '/api/update-check') {
+      data = await checkForUpdates()
     } else if (method === 'GET' && p === '/api/snippets') {
       data = store.listMatches()
     } else if (method === 'POST' && p === '/api/snippets/import') {

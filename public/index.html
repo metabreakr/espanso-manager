@@ -43,6 +43,9 @@
             <button class="menu-item" data-action="bulk" role="menuitem">Bulk delete…</button>
             <div class="menu-sep"></div>
             <button class="menu-item" data-action="restore" role="menuitem">Move out of iCloud…</button>
+            <div class="menu-sep"></div>
+            <button class="menu-item" data-action="updates" role="menuitem">Check for updates…</button>
+            <button class="menu-item" data-action="about" role="menuitem">About Espanso Manager</button>
           </div>
         </div>
         <button id="syncBtn" class="sync-btn" title="iCloud sync status"></button>
@@ -230,6 +233,44 @@
         <div class="spacer"></div>
         <button id="restoreDefault" class="danger">Use default</button>
         <button id="restoreKeep" class="primary">Keep my snippets</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- About -->
+  <div id="aboutBackdrop" class="modal-backdrop hidden">
+    <div class="modal about-modal">
+      <div class="modal-header">
+        <h2>About</h2>
+        <button id="aboutClose" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+      <div class="about-body">
+        <img src="icon.png" class="about-icon" alt="Espanso Manager icon" />
+        <div class="about-name">Espanso Manager</div>
+        <div class="about-version" id="aboutVersion">Version …</div>
+
+        <p class="about-line">Created by <strong>Jonathan Ruzek</strong><br />
+          <a href="https://github.com/metabreakr/espanso-manager" target="_blank" rel="noopener">github.com/metabreakr/espanso-manager</a></p>
+
+        <p class="about-line about-dim">Manages snippets for <a href="https://espanso.org/" target="_blank" rel="noopener">Espanso</a>,
+          the privacy-first text expander created by <strong>Federico Terzi</strong> and contributors
+          (<a href="https://github.com/espanso/espanso" target="_blank" rel="noopener">github.com/espanso/espanso</a>).</p>
+
+        <div class="about-powered">
+          <div class="about-powered-title">Powered by</div>
+          <div class="about-badges">
+            <span class="tech">Node.js</span>
+            <span class="tech">yaml</span>
+            <span class="tech">WebKit + Swift</span>
+            <span class="tech">HTML · CSS · JS</span>
+          </div>
+        </div>
+
+        <p class="about-line about-dim">Licensed under
+          <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GPL-3.0</a>,
+          the same license as Espanso.</p>
+
+        <a class="bmc-btn" href="https://buymeacoffee.com/ruzek" target="_blank" rel="noopener">☕ Buy me a coffee</a>
       </div>
     </div>
   </div>

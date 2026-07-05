@@ -110,6 +110,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         serverProcess?.terminate() // only set if we started it
     }
 
+    // Open external (non-localhost) links in the user's default browser instead of
+    // navigating the app's own window. Covers normal link clicks.
+    func webView(_ webView: WKWebView,
+                 decidePolicyFor navigationAction: WKNavigationAction,
+                 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        if let url = navigationAction.request.url,
+           let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https",
+           url.host != "127.0.0.1", url.host != "localhost" {
+            NSWorkspace.shared.open(url)
+            decisionHandler(.cancel)
+            return
+        }
+        decisionHandler(.allow)
+    }
+
+    // Same, for links that open a new window (target="_blank" / window.open).
+    func webView(_ webView: WKWebView,
+                 createWebViewWith configuration: WKWebViewConfiguration,
+                 for navigationAction: WKNavigationAction,
+                 windowFeatures: WKWindowFeatures) -> WKWebView? {
+        if let url = navigationAction.request.url { NSWorkspace.shared.open(url) }
+        return nil
+    }
+
     // --- WKUIDelegate: WebKit doesn't provide these by default, so the web UI's
     // file input and JS dialogs would silently do nothing without them. ---
 

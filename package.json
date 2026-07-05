@@ -1,6 +1,6 @@
 {
   "name": "espanso-manager",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "A simple local web UI for managing your Espanso snippets, with comment-preserving YAML editing and optional iCloud sync across Macs.",
   "type": "module",
   "main": "server.mjs",
@@ -20,6 +20,11 @@
   ],
   "author": "Jonathan Ruzek",
   "license": "GPL-3.0-only",
+  "homepage": "https://github.com/metabreakr/espanso-manager",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/metabreakr/espanso-manager.git"
+  },
   "dependencies": {
     "yaml": "^2.9.0"
   }

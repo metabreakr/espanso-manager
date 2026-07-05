@@ -70,6 +70,8 @@ const el = {
   toolsMenu: document.getElementById('toolsMenu'),
   restoreBackdrop: document.getElementById('restoreBackdrop'),
   restoreDesc: document.getElementById('restoreDesc'),
+  aboutBackdrop: document.getElementById('aboutBackdrop'),
+  aboutVersion: document.getElementById('aboutVersion'),
 };
 
 async function api(path, opts) {
@@ -745,6 +747,31 @@ async function doRestore(useDefault) {
   }
 }
 
+// ---------- About + update check ----------
+
+function openAbout() { el.aboutBackdrop.classList.remove('hidden'); }
+function closeAbout() { el.aboutBackdrop.classList.add('hidden'); }
+
+async function checkUpdates() {
+  showToast('Checking for updates…');
+  try {
+    const r = await api('/api/update-check');
+    if (r.updateAvailable) {
+      const ok = await confirmDialog({
+        title: 'Update available',
+        message: `Version ${r.latest} is available — you have ${r.current}. Download it from the releases page and re-run the installer.`,
+        okLabel: 'View release',
+        danger: false,
+      });
+      if (ok && r.url) window.open(r.url, '_blank');
+    } else {
+      showToast(`You're up to date (v${r.current})`);
+    }
+  } catch (err) {
+    showToast('Update check failed: ' + err.message, true);
+  }
+}
+
 async function init() {
   document.getElementById('newSnippetBtn').addEventListener('click', openCreate);
   document.getElementById('emptyNewBtn').addEventListener('click', openCreate);
@@ -755,7 +782,7 @@ async function init() {
   document.querySelectorAll('.tab-btn').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
   el.modalBackdrop.addEventListener('click', (e) => { if (e.target === el.modalBackdrop) closeModal(); });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeModal(); closeSyncModal(); closeImport(); closeBulkDelete(); closeTest(); closeRestore(); closeToolsMenu(); }
+    if (e.key === 'Escape') { closeModal(); closeSyncModal(); closeImport(); closeBulkDelete(); closeTest(); closeRestore(); closeAbout(); closeToolsMenu(); }
   });
   el.search.addEventListener('input', render);
 
@@ -821,6 +848,8 @@ async function init() {
     else if (action === 'import') el.importFile.click();
     else if (action === 'bulk') openBulkDelete();
     else if (action === 'restore') openRestore();
+    else if (action === 'updates') checkUpdates();
+    else if (action === 'about') openAbout();
   });
   // Close the menu when clicking anywhere outside it.
   document.addEventListener('click', (e) => { if (!e.target.closest('.menu-wrap')) closeToolsMenu(); });
@@ -831,6 +860,10 @@ async function init() {
   document.getElementById('restoreKeep').addEventListener('click', () => doRestore(false));
   document.getElementById('restoreDefault').addEventListener('click', () => doRestore(true));
   el.restoreBackdrop.addEventListener('click', (e) => { if (e.target === el.restoreBackdrop) closeRestore(); });
+
+  // About
+  document.getElementById('aboutClose').addEventListener('click', closeAbout);
+  el.aboutBackdrop.addEventListener('click', (e) => { if (e.target === el.aboutBackdrop) closeAbout(); });
 
   // Cmd+Enter (or Ctrl+Enter) saves while the edit modal is open.
   document.addEventListener('keydown', (e) => {
@@ -845,6 +878,7 @@ async function init() {
     const parts = meta.matchFile.split('/');
     el.matchFilePath.textContent = (parts.length > 3 ? '…/' : '') + parts.slice(-3).join('/');
     el.matchFilePath.title = meta.matchFile;
+    el.aboutVersion.textContent = 'Version ' + (meta.version || '—');
     state.espansoReload = !!meta.espansoReload;
     state.snippets = await api('/api/snippets');
     render();
