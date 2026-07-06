@@ -72,6 +72,7 @@ const el = {
   restoreDesc: document.getElementById('restoreDesc'),
   aboutBackdrop: document.getElementById('aboutBackdrop'),
   aboutVersion: document.getElementById('aboutVersion'),
+  aboutEspanso: document.getElementById('aboutEspanso'),
 };
 
 async function api(path, opts) {
@@ -749,8 +750,35 @@ async function doRestore(useDefault) {
 
 // ---------- About + update check ----------
 
-function openAbout() { el.aboutBackdrop.classList.remove('hidden'); }
+function openAbout() {
+  el.aboutBackdrop.classList.remove('hidden');
+  // Show the installed Espanso version immediately, then fetch the latest to compare.
+  const installed = state.espansoVersion;
+  if (!installed) {
+    el.aboutEspanso.textContent = 'Espanso not detected';
+    return;
+  }
+  el.aboutEspanso.textContent = `Espanso ${installed} installed`;
+  api('/api/espanso-latest').then((r) => {
+    if (!r.latest) return;
+    const newer = compareVersionStr(r.latest, installed) > 0;
+    el.aboutEspanso.innerHTML =
+      `Espanso ${escapeHtml(installed)} installed · latest ` +
+      `<a href="${escapeHtml(r.url)}" target="_blank" rel="noopener"${newer ? ' class="newer"' : ''}>${escapeHtml(r.latest)}</a>`;
+  }).catch(() => { /* leave the installed-only line */ });
+}
 function closeAbout() { el.aboutBackdrop.classList.add('hidden'); }
+
+// Compare dotted numeric versions; >0 if a is newer than b.
+function compareVersionStr(a, b) {
+  const pa = String(a).split('.').map(Number);
+  const pb = String(b).split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] || 0) - (pb[i] || 0);
+    if (d) return d;
+  }
+  return 0;
+}
 
 async function checkUpdates() {
   showToast('Checking for updates…');
@@ -880,6 +908,7 @@ async function init() {
     el.matchFilePath.title = meta.matchFile;
     el.aboutVersion.textContent = 'Version ' + (meta.version || '—');
     state.espansoReload = !!meta.espansoReload;
+    state.espansoVersion = meta.espansoVersion || null;
     state.snippets = await api('/api/snippets');
     render();
   } catch (err) {

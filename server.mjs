@@ -91,9 +91,25 @@ async function handleApi(req, res, url) {
   try {
     let data
     if (method === 'GET' && p === '/api/meta') {
-      data = { matchFile: store.MATCH_FILE, espansoReload: !!store.findEspanso(), version: VERSION, repo: REPO }
+      data = {
+        matchFile: store.MATCH_FILE,
+        espansoReload: !!store.findEspanso(),
+        espansoVersion: store.getEspansoVersion(),
+        version: VERSION,
+        repo: REPO,
+      }
     } else if (method === 'GET' && p === '/api/update-check') {
       data = await checkForUpdates()
+    } else if (method === 'GET' && p === '/api/espanso-latest') {
+      const res = await fetch('https://api.github.com/repos/espanso/espanso/releases/latest', {
+        headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'espanso-manager' },
+      })
+      if (!res.ok) throw new Error(`GitHub returned ${res.status}`)
+      const d = await res.json()
+      data = {
+        latest: String(d.tag_name || '').replace(/^v/, ''),
+        url: d.html_url || 'https://github.com/espanso/espanso/releases',
+      }
     } else if (method === 'GET' && p === '/api/snippets') {
       data = store.listMatches()
     } else if (method === 'POST' && p === '/api/snippets/import') {

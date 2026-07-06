@@ -11,7 +11,7 @@
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
-import { spawn } from 'child_process'
+import { spawn, spawnSync } from 'child_process'
 import { parseDocument, stringify, Scalar, YAMLSeq, YAMLMap } from 'yaml'
 
 const LOCAL_MATCH_FILE = path.join(
@@ -237,6 +237,22 @@ export function findEspanso() {
     }
   }
   return null
+}
+
+// The installed Espanso version (e.g. "2.3.0"), or null if Espanso isn't found.
+// Note: `espanso --version` prints the version but exits non-zero, so we use spawnSync
+// (which doesn't throw on a non-zero exit) and read both stdout and stderr.
+export function getEspansoVersion() {
+  const bin = findEspanso()
+  if (!bin) return null
+  try {
+    const r = spawnSync(bin, ['--version'], { encoding: 'utf8', timeout: 3000 })
+    const out = (r.stdout || '') + (r.stderr || '')
+    const m = out.match(/(\d+\.\d+\.\d+)/)
+    return m ? m[1] : null
+  } catch {
+    return null
+  }
 }
 
 // Espanso doesn't reliably auto-detect edits made through the iCloud symlink, so we nudge

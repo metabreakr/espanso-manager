@@ -14,6 +14,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue.svg" alt="License: GPL-3.0" /></a>
   <img src="https://img.shields.io/badge/platform-macOS-lightgrey.svg" alt="Platform: macOS" />
   <a href="https://github.com/metabreakr/espanso-manager/actions/workflows/ci.yml"><img src="https://github.com/metabreakr/espanso-manager/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://buymeacoffee.com/ruzek"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-support-FFDD00?logo=buymeacoffee&logoColor=black" alt="Buy me a coffee" /></a>
 </p>
 
 <p align="center">
@@ -119,6 +120,14 @@ change the port with `PORT`.
 | `install.sh` / `install.command` | Builds the macOS `.app` bundle |
 | `EspansoManager.launcher.sh` | Browser-launcher fallback used when Swift isn't available |
 | `store.test.mjs` | Smoke tests (`npm test`) |
+
+## Support
+
+If Espanso Manager saves you time, you can support its development — thank you!
+
+<a href="https://buymeacoffee.com/ruzek"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" height="46" /></a>
+
+Found a bug or have an idea? [Open an issue](https://github.com/metabreakr/espanso-manager/issues).
 
 ## License
 

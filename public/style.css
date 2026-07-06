@@ -285,10 +285,12 @@ button.icon-btn { background: transparent; border: none; font-size: 16px; color:
 .about-icon { width: 72px; height: 72px; border-radius: 16px; }
 .about-name { font-size: 18px; font-weight: 700; margin-top: 10px; }
 .about-version { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.about-espanso { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+.about-espanso .newer { color: var(--accent-2); }
 .about-line { font-size: 13px; margin: 12px 0; line-height: 1.55; }
 .about-line.about-dim { color: var(--text-dim); font-size: 12px; }
-.about-body a:not(.bmc-btn) { color: var(--accent-1); text-decoration: none; }
-.about-body a:not(.bmc-btn):hover { text-decoration: underline; }
+.about-body a:not(.bmc-btn):not(.about-btn) { color: var(--accent-1); text-decoration: none; }
+.about-body a:not(.bmc-btn):not(.about-btn):hover { text-decoration: underline; }
 .about-powered { margin: 16px 0; }
 .about-powered-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 8px; }
 .about-badges { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
