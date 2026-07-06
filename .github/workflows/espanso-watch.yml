@@ -1,0 +1,83 @@
+name: Espanso compatibility watch
+
+# Watches Espanso's releases and opens an issue only when a new MAJOR version appears
+# (e.g. 2.x -> 3.x), since that's the realistic risk of breaking Espanso Manager.
+# Minor/patch Espanso updates are ignored — the manager parses generic YAML and falls
+# back to raw-YAML editing for anything it doesn't structure, so those don't break it.
+
+on:
+  schedule:
+    - cron: '0 12 * * 1' # Mondays at 12:00 UTC
+  workflow_dispatch: # allow manual runs
+
+permissions:
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            // Bump this once Espanso Manager has been verified against a new major version.
+            const SUPPORTED_MAJOR = 2;
+
+            let rel;
+            try {
+              const res = await fetch('https://api.github.com/repos/espanso/espanso/releases/latest', {
+                headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'espanso-manager-ci' },
+              });
+              if (!res.ok) { core.warning(`GitHub API returned ${res.status}`); return; }
+              rel = await res.json();
+            } catch (e) {
+              core.warning(`Could not fetch Espanso releases: ${e.message}`);
+              return;
+            }
+
+            const tag = rel.tag_name || '';
+            const m = tag.replace(/^v/, '').match(/^(\d+)\./);
+            if (!m) { core.info(`Could not parse a version from tag "${tag}"`); return; }
+            const major = Number(m[1]);
+            core.info(`Latest Espanso: ${tag} (major ${major}); supported major ${SUPPORTED_MAJOR}`);
+
+            if (major <= SUPPORTED_MAJOR) {
+              core.info('No new major version — nothing to do.');
+              return;
+            }
+
+            const title = `Espanso ${major}.x released — check compatibility`;
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'espanso-compat',
+            });
+            if (existing.data.some((i) => i.title === title)) {
+              core.info('An open issue already exists for this major — nothing to do.');
+              return;
+            }
+
+            const body = [
+              `A new **major** version of Espanso is available: **${tag}** (${rel.html_url}).`,
+              ``,
+              `Espanso Manager is verified against Espanso **${SUPPORTED_MAJOR}.x**. A new major version *may* change the match-file format or the CLI, so it's worth confirming that:`,
+              ``,
+              `- [ ] \`base.yml\` still parses and round-trips with comments preserved`,
+              `- [ ] \`espanso --version\` and \`espanso service restart\` still behave as expected`,
+              `- [ ] the match file is still at \`~/Library/Application Support/espanso/match/base.yml\``,
+              ``,
+              `Once verified, bump \`SUPPORTED_MAJOR\` in \`.github/workflows/espanso-watch.yml\` to silence this alert.`,
+              ``,
+              `_Opened automatically by the Espanso compatibility watch workflow._`,
+            ].join('\n');
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              labels: ['espanso-compat'],
+              body,
+            });
+            core.info('Opened a compatibility issue.');
