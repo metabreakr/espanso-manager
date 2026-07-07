@@ -5,3 +5,5 @@ package-lock.json
 # Any base.yml that lands in the repo dir is user data, not part of the project.
 base.yml
 base.yml.backup-*
+# Private working/handoff notes — kept local, not published.
+HANDOFF.md
